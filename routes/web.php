@@ -1,20 +1,145 @@
 <?php
 
-use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
+// ══════════════════════════════════════════════════════════════
+// PUBLIC ROUTES — accessible to everyone (passengers + guests)
+// ══════════════════════════════════════════════════════════════
+
+// Homepage — passenger-friendly landing page
 Route::get('/', function () {
-    return view('welcome');
-});
+    return view('public.home');
+})->name('home');
+
+// Public employee registration application form
+Route::get('/apply', [App\Http\Controllers\EmployeeRegistrationController::class, 'create'])
+    ->name('employee.apply');
+Route::post('/apply', [App\Http\Controllers\EmployeeRegistrationController::class, 'store']);
+Route::get('/apply/success', [App\Http\Controllers\EmployeeRegistrationController::class, 'success'])
+    ->name('registration.success');
+
+// ══════════════════════════════════════════════════════════════
+// AUTHENTICATED REDIRECT — sends each role to their dashboard
+// ══════════════════════════════════════════════════════════════
 
 Route::get('/dashboard', function () {
-    return view('dashboard');
+    return match(auth()->user()->role) {
+        'admin'              => redirect()->route('admin.dashboard'),
+        'executive_officer'  => redirect()->route('officer.dashboard'),
+        'timekeeper'         => redirect()->route('timekeeper.dashboard'),
+        'storekeeper'        => redirect()->route('storekeeper.dashboard'),
+        'driver', 'conductor'=> redirect()->route('driver.dashboard'),
+        default              => redirect()->route('employee.dashboard'),
+    };
 })->middleware(['auth', 'verified'])->name('dashboard');
 
+// ══════════════════════════════════════════════════════════════
+// PROFILE (all authenticated users)
+// ══════════════════════════════════════════════════════════════
+
 Route::middleware('auth')->group(function () {
-    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/profile', [App\Http\Controllers\ProfileController::class, 'edit'])
+        ->name('profile.edit');
+    Route::patch('/profile', [App\Http\Controllers\ProfileController::class, 'update'])
+        ->name('profile.update');
+    Route::delete('/profile', [App\Http\Controllers\ProfileController::class, 'destroy'])
+        ->name('profile.destroy');
+});
+
+// ══════════════════════════════════════════════════════════════
+// NOTIFICATIONS (all authenticated users)
+// ══════════════════════════════════════════════════════════════
+
+Route::middleware('auth')->group(function () {
+    Route::get('/notifications', [App\Http\Controllers\NotificationController::class, 'index'])
+        ->name('notifications.index');
+    Route::post('/notifications/{notification}/read', [App\Http\Controllers\NotificationController::class, 'markRead'])
+        ->name('notifications.read');
+    Route::post('/notifications/read-all', [App\Http\Controllers\NotificationController::class, 'markAllRead'])
+        ->name('notifications.read-all');
+});
+
+// ══════════════════════════════════════════════════════════════
+// ADMIN DASHBOARD
+// ══════════════════════════════════════════════════════════════
+
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', function () {
+        return view('admin.dashboard', [
+            'totalEmployees'       => \App\Models\User::where('role', '!=', 'admin')->count(),
+            'activeBuses'          => 0,
+            'todaySchedules'       => 0,
+            'pendingRegistrations' => \App\Models\EmployeeRegistration::where('status', 'pending')->count(),
+        ]);
+    })->name('dashboard');
+});
+
+// ══════════════════════════════════════════════════════════════
+// EXECUTIVE OFFICER DASHBOARD
+// ══════════════════════════════════════════════════════════════
+
+Route::middleware(['auth', 'role:executive_officer'])->prefix('officer')->name('officer.')->group(function () {
+    Route::get('/dashboard', function () {
+        return view('officer.dashboard', [
+            'pendingRegistrations' => \App\Models\EmployeeRegistration::where('status', 'pending')->count(),
+        ]);
+    })->name('dashboard');
+});
+
+// ══════════════════════════════════════════════════════════════
+// TIMEKEEPER DASHBOARD
+// ══════════════════════════════════════════════════════════════
+
+Route::middleware(['auth', 'role:timekeeper'])->prefix('timekeeper')->name('timekeeper.')->group(function () {
+    Route::get('/dashboard', fn() => view('timekeeper.dashboard'))->name('dashboard');
+});
+
+// ══════════════════════════════════════════════════════════════
+// STOREKEEPER DASHBOARD
+// ══════════════════════════════════════════════════════════════
+
+Route::middleware(['auth', 'role:storekeeper'])->prefix('storekeeper')->name('storekeeper.')->group(function () {
+    Route::get('/dashboard', fn() => view('storekeeper.dashboard'))->name('dashboard');
+});
+
+// ══════════════════════════════════════════════════════════════
+// DRIVER / CONDUCTOR DASHBOARD
+// ══════════════════════════════════════════════════════════════
+
+Route::middleware(['auth', 'role:driver,conductor'])->prefix('driver')->name('driver.')->group(function () {
+    Route::get('/dashboard', fn() => view('driver.dashboard'))->name('dashboard');
+    Route::get('/schedule', fn() => view('driver.schedule'))->name('schedule');
+});
+
+// ══════════════════════════════════════════════════════════════
+// GENERAL EMPLOYEE DASHBOARD
+// ══════════════════════════════════════════════════════════════
+
+Route::middleware(['auth', 'role:employee'])->prefix('employee')->name('employee.')->group(function () {
+    Route::get('/dashboard', fn() => view('employee.dashboard'))->name('dashboard');
+});
+
+// ══════════════════════════════════════════════════════════════
+// EMPLOYEE MANAGEMENT (admin + executive_officer)
+// ══════════════════════════════════════════════════════════════
+
+Route::middleware(['auth', 'role:admin,executive_officer'])->group(function () {
+
+    Route::resource('employees', App\Http\Controllers\EmployeeController::class)
+        ->except(['destroy']);
+    Route::post('employees/{employee}/disable', [App\Http\Controllers\EmployeeController::class, 'disable'])
+        ->name('employees.disable');
+    Route::post('employees/{employee}/enable', [App\Http\Controllers\EmployeeController::class, 'enable'])
+        ->name('employees.enable');
+
+    Route::get('registrations', [App\Http\Controllers\EmployeeRegistrationController::class, 'index'])
+        ->name('registrations.index');
+    Route::get('registrations/{registration}', [App\Http\Controllers\EmployeeRegistrationController::class, 'show'])
+        ->name('registrations.show');
+    Route::post('registrations/{registration}/approve', [App\Http\Controllers\EmployeeRegistrationController::class, 'approve'])
+        ->name('registrations.approve');
+    Route::post('registrations/{registration}/reject', [App\Http\Controllers\EmployeeRegistrationController::class, 'reject'])
+        ->name('registrations.reject');
 });
 
 require __DIR__.'/auth.php';
