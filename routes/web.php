@@ -188,4 +188,56 @@ Route::middleware('passenger')->prefix('passenger')->name('passenger.')->group(f
 Route::middleware('auth')->post('/account/avatar', [App\Http\Controllers\AvatarController::class, 'upload'])
     ->name('account.avatar');
 
+// ── Public schedule view (no auth) ────────────────────────────────────────
+Route::get('/schedules', [App\Http\Controllers\ScheduleController::class, 'publicIndex'])
+    ->name('schedules.public');
+
+// ── Bus management (admin + executive_officer) ────────────────────────────
+Route::middleware(['auth', 'role:admin,executive_officer'])->group(function () {
+    Route::resource('buses', App\Http\Controllers\BusController::class)->except(['destroy']);
+    Route::post('buses/{bus}/status', [App\Http\Controllers\BusController::class, 'updateStatus'])
+        ->name('buses.status');
+
+    Route::resource('routes', App\Http\Controllers\RouteController::class)->except(['destroy']);
+    Route::post('routes/{route}/toggle-status', [App\Http\Controllers\RouteController::class, 'toggleStatus'])
+        ->name('routes.toggle-status');
+});
+
+// ── Schedule management (admin + executive_officer + timekeeper) ───────────
+Route::middleware(['auth', 'role:admin,executive_officer,timekeeper'])->group(function () {
+    Route::get('schedules/manage', [App\Http\Controllers\ScheduleController::class, 'index'])
+        ->name('schedules.index');
+    Route::get('schedules/create', [App\Http\Controllers\ScheduleController::class, 'create'])
+        ->name('schedules.create');
+    Route::post('schedules', [App\Http\Controllers\ScheduleController::class, 'store'])
+        ->name('schedules.store');
+    Route::get('schedules/{schedule}', [App\Http\Controllers\ScheduleController::class, 'show'])
+        ->name('schedules.show');
+    Route::get('schedules/{schedule}/edit', [App\Http\Controllers\ScheduleController::class, 'edit'])
+        ->name('schedules.edit');
+    Route::patch('schedules/{schedule}', [App\Http\Controllers\ScheduleController::class, 'update'])
+        ->name('schedules.update');
+    Route::get('api/calendar-events', [App\Http\Controllers\ScheduleController::class, 'calendarEvents'])
+        ->name('schedules.calendar-events');
+});
+
+// ── Deactivate/activate schedules (admin + executive_officer only) ─────────
+Route::middleware(['auth', 'role:admin,executive_officer'])->group(function () {
+    Route::post('schedules/{schedule}/deactivate', [App\Http\Controllers\ScheduleController::class, 'deactivate'])
+        ->name('schedules.deactivate');
+    Route::post('schedules/{schedule}/activate', [App\Http\Controllers\ScheduleController::class, 'activate'])
+        ->name('schedules.activate');
+});
+
+Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/dashboard', function () {
+        return view('admin.dashboard', [
+            'totalEmployees'    => \App\Models\User::where('role', '!=', 'admin')->count(),
+            'activeBuses'       => \App\Models\Bus::where('status', 'active')->count(),
+            'todaySchedules'    => \App\Models\Schedule::whereDate('schedule_date', today())->where('status', 'active')->count(),
+            'pendingRegistrations' => \App\Models\EmployeeRegistration::where('status', 'pending')->count(),
+        ]);
+    })->name('dashboard');
+});
+
 require __DIR__.'/auth.php';
