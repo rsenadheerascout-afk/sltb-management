@@ -285,4 +285,36 @@ Route::middleware(['auth', 'role:admin,executive_officer'])->group(function () {
         ->name('bookings.index');
 });
 
+// ══════════════════════════════════════════════════════════════
+// BREAKDOWN REPORTS
+// ══════════════════════════════════════════════════════════════
+
+// Driver/conductor: file a report
+Route::middleware(['auth', 'role:driver,conductor'])->group(function () {
+    Route::get('/breakdowns/create', [App\Http\Controllers\BreakdownReportController::class, 'create'])
+        ->name('breakdowns.create');
+    Route::post('/breakdowns', [App\Http\Controllers\BreakdownReportController::class, 'store'])
+        ->name('breakdowns.store');
+});
+
+// Admin/officer: manage reports
+Route::middleware(['auth', 'role:admin,executive_officer'])->group(function () {
+    Route::get('/breakdowns', [App\Http\Controllers\BreakdownReportController::class, 'index'])
+        ->name('breakdowns.index');
+    Route::post('/breakdowns/{breakdown}/approve', [App\Http\Controllers\BreakdownReportController::class, 'approve'])
+        ->name('breakdowns.approve');
+    Route::post('/breakdowns/{breakdown}/reject', [App\Http\Controllers\BreakdownReportController::class, 'reject'])
+        ->name('breakdowns.reject');
+    Route::post('/breakdowns/{breakdown}/respond', [App\Http\Controllers\BreakdownReportController::class, 'respond'])
+        ->name('breakdowns.respond');
+    Route::post('/breakdowns/{breakdown}/resolve', [App\Http\Controllers\BreakdownReportController::class, 'resolve'])
+        ->name('breakdowns.resolve');
+});
+
+// Both admin/officer AND driver/conductor can view a report
+Route::middleware(['auth', 'role:admin,executive_officer,driver,conductor'])->group(function () {
+    Route::get('/breakdowns/{breakdown}', [App\Http\Controllers\BreakdownReportController::class, 'show'])
+        ->name('breakdowns.show');
+});
+
 require __DIR__.'/auth.php';
