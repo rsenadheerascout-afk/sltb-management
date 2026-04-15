@@ -11,8 +11,16 @@ class User extends Authenticatable
     use HasFactory, Notifiable;
 
     protected $fillable = [
-        'name', 'email', 'password', 'role', 'nic',
-        'phone', 'address', 'employee_id', 'status', 'is_approved',
+        'name',
+        'email',
+        'password',
+        'role',
+        'nic',
+        'phone',
+        'address',
+        'employee_id',
+        'status',
+        'is_approved',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -21,8 +29,8 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            'password'          => 'hashed',
-            'is_approved'       => 'boolean',
+            'password' => 'hashed',
+            'is_approved' => 'boolean',
         ];
     }
 
@@ -31,11 +39,25 @@ class User extends Authenticatable
         return in_array($this->role, (array) $roles);
     }
 
-    public function isActive(): bool    { return $this->status === 'active'; }
-    public function isApproved(): bool  { return $this->is_approved; }
+    public function isActive(): bool
+    {
+        return $this->status === 'active';
+    }
+    public function isApproved(): bool
+    {
+        return $this->is_approved;
+    }
 
     public function sltbNotifications()
     {
         return $this->hasMany(SltbNotification::class);
+    }
+
+    // Add this to app/Models/User.php inside the class
+    public function getAvatarUrlAttribute(): string
+    {
+        return $this->avatar
+            ? asset('storage/' . $this->avatar)
+            : asset('images/default-avatar.png');
     }
 }

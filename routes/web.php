@@ -142,4 +142,50 @@ Route::middleware(['auth', 'role:admin,executive_officer'])->group(function () {
         ->name('registrations.reject');
 });
 
+// ══════════════════════════════════════════════════════════════
+// PASSENGER AUTH ROUTES (uses passenger guard)
+// ══════════════════════════════════════════════════════════════
+
+// Unified register page (toggle: passenger account OR staff application)
+Route::get('/register', [App\Http\Controllers\Passenger\PassengerAuthController::class, 'showRegister'])
+    ->name('passenger.register')
+    ->middleware('guest');
+Route::post('/register', [App\Http\Controllers\Passenger\PassengerAuthController::class, 'register'])
+    ->middleware('guest');
+
+// Passenger login
+Route::get('/passenger/login', [App\Http\Controllers\Passenger\PassengerAuthController::class, 'showLogin'])
+    ->name('passenger.login')
+    ->middleware('guest');
+Route::post('/passenger/login', [App\Http\Controllers\Passenger\PassengerAuthController::class, 'login'])
+    ->middleware('guest');
+
+// Passenger logout
+Route::post('/passenger/logout', [App\Http\Controllers\Passenger\PassengerAuthController::class, 'logout'])
+    ->name('passenger.logout');
+
+// ══════════════════════════════════════════════════════════════
+// PASSENGER DASHBOARD (passenger guard required)
+// ══════════════════════════════════════════════════════════════
+
+Route::middleware('passenger')->prefix('passenger')->name('passenger.')->group(function () {
+    Route::get('/dashboard', [App\Http\Controllers\Passenger\PassengerController::class, 'dashboard'])
+        ->name('dashboard');
+    Route::get('/profile', [App\Http\Controllers\Passenger\PassengerController::class, 'profile'])
+        ->name('profile');
+    Route::patch('/profile', [App\Http\Controllers\Passenger\PassengerController::class, 'updateProfile'])
+        ->name('profile.update');
+    Route::post('/avatar', [App\Http\Controllers\Passenger\PassengerController::class, 'uploadAvatar'])
+        ->name('avatar');
+    Route::get('/bookings', [App\Http\Controllers\Passenger\PassengerController::class, 'bookings'])
+        ->name('bookings');
+});
+
+// ══════════════════════════════════════════════════════════════
+// EMPLOYEE AVATAR UPLOAD (employee auth guard)
+// ══════════════════════════════════════════════════════════════
+
+Route::middleware('auth')->post('/account/avatar', [App\Http\Controllers\AvatarController::class, 'upload'])
+    ->name('account.avatar');
+
 require __DIR__.'/auth.php';

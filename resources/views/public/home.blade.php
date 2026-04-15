@@ -28,11 +28,27 @@
             <div class="flex items-center gap-4">
                 <a href="#schedules" class="text-sm text-gray-600 hover:text-gray-900">Schedules</a>
                 <a href="#how-to-book" class="text-sm text-gray-600 hover:text-gray-900">How to book</a>
-                <a href="{{ route('employee.apply') }}" class="text-sm text-gray-600 hover:text-gray-900">Join staff</a>
-                <a href="{{ route('login') }}"
-                    class="text-sm px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors">
-                    Staff login
-                </a>
+
+                @auth('passenger')
+                    {{-- Passenger is logged in --}}
+                    <a href="{{ route('passenger.dashboard') }}" class="text-sm text-gray-600 hover:text-gray-900">My
+                        Account</a>
+                @else
+                    <a href="{{ route('passenger.login') }}" class="text-sm text-gray-600 hover:text-gray-900">Sign in</a>
+                    <a href="{{ route('passenger.register') }}"
+                        class="text-sm px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium">
+                        Register
+                    </a>
+                @endauth
+
+                @auth
+                    <a href="{{ route('dashboard') }}"
+                        class="text-sm px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">
+                        Staff Portal
+                    </a>
+                @else
+                    <a href="{{ route('login') }}" class="text-sm text-gray-500 hover:text-gray-700">Staff login</a>
+                @endauth
             </div>
         </div>
     </nav>
