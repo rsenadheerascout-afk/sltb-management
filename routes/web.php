@@ -70,6 +70,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
             'activeBuses'          => 0,
             'todaySchedules'       => 0,
             'pendingRegistrations' => \App\Models\EmployeeRegistration::where('status', 'pending')->count(),
+            'todayRevenue'         => \App\Models\Booking::whereDate('booked_at', today())->where('payment_status', 'paid')->sum('amount'),
+            'totalBookings'        => \App\Models\Booking::where('payment_status', 'paid')->count(),
         ]);
     })->name('dashboard');
 });
@@ -236,6 +238,8 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
             'activeBuses'       => \App\Models\Bus::where('status', 'active')->count(),
             'todaySchedules'    => \App\Models\Schedule::whereDate('schedule_date', today())->where('status', 'active')->count(),
             'pendingRegistrations' => \App\Models\EmployeeRegistration::where('status', 'pending')->count(),
+            'todayRevenue'         => \App\Models\Booking::whereDate('booked_at', today())->where('payment_status', 'paid')->sum('amount'),
+            'totalBookings'        => \App\Models\Booking::where('payment_status', 'paid')->count(),
         ]);
     })->name('dashboard');
 });
