@@ -240,4 +240,45 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     })->name('dashboard');
 });
 
+// ══════════════════════════════════════════════════════════════
+// SEAT BOOKING — public, no auth required
+// ══════════════════════════════════════════════════════════════
+
+Route::prefix('book')->name('booking.')->group(function () {
+
+    // Step 2: Visual seat picker
+    Route::get('/seats/{schedule}', [App\Http\Controllers\BookingController::class, 'selectSeats'])
+        ->name('select-seats');
+
+    // Step 3: Passenger details
+    // Accepts GET (browser refresh reads from session) and POST (form submission from seat picker)
+    Route::match(['GET', 'POST'], '/details/{schedule}', [App\Http\Controllers\BookingController::class, 'passengerDetails'])
+        ->name('passenger-details');
+
+    // Step 4: Checkout
+    Route::post('/checkout', [App\Http\Controllers\BookingController::class, 'checkout'])
+        ->name('checkout');
+
+    // Step 5: Stripe redirects back here after payment
+    Route::get('/confirm', [App\Http\Controllers\BookingController::class, 'confirm'])
+        ->name('confirm');
+
+    // Step 6: Confirmation page
+    Route::get('/confirmation', [App\Http\Controllers\BookingController::class, 'confirmation'])
+        ->name('confirmation');
+
+    // PDF receipt — accessible with booking reference
+    Route::get('/receipt/{ref}', [App\Http\Controllers\BookingController::class, 'downloadReceipt'])
+        ->name('receipt');
+});
+
+// ══════════════════════════════════════════════════════════════
+// BOOKINGS ADMIN LIST
+// ══════════════════════════════════════════════════════════════
+
+Route::middleware(['auth', 'role:admin,executive_officer'])->group(function () {
+    Route::get('/bookings', [App\Http\Controllers\BookingController::class, 'index'])
+        ->name('bookings.index');
+});
+
 require __DIR__.'/auth.php';
