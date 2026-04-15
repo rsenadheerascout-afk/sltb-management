@@ -17,4 +17,12 @@ class Seat extends Model
     {
         return $this->hasMany(Booking::class);
     }
+
+    public function isBookedForSchedule(int $scheduleId): bool
+    {
+        return $this->bookings()
+            ->where('schedule_id', $scheduleId)
+            ->where('payment_status', 'paid')
+            ->exists();
+    }
 }
