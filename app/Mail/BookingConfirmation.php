@@ -3,51 +3,37 @@
 namespace App\Mail;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Collection;
 
 class BookingConfirmation extends Mailable
 {
     use Queueable, SerializesModels;
 
-    /**
-     * Create a new message instance.
-     */
-    public function __construct()
+    public Collection $bookings;
+
+    public function __construct(Collection $bookings)
     {
-        //
+        $this->bookings = $bookings;
     }
 
-    /**
-     * Get the message envelope.
-     */
     public function envelope(): Envelope
     {
-        return new Envelope(
-            subject: 'Booking Confirmation',
-        );
+        $refs = $this->bookings->pluck('booking_ref')->join(', ');
+        return new Envelope(subject: 'Booking Confirmed — ' . $refs);
     }
 
-    /**
-     * Get the message content definition.
-     */
     public function content(): Content
     {
         return new Content(
             markdown: 'emails.booking',
+            with: [
+                'bookings'  => $this->bookings,
+                'firstName' => explode(' ', $this->bookings->first()->passenger_name)[0],
+            ],
         );
-    }
-
-    /**
-     * Get the attachments for the message.
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
-     */
-    public function attachments(): array
-    {
-        return [];
     }
 }
