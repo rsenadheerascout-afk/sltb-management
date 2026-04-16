@@ -335,4 +335,44 @@ Route::middleware(['auth', 'role:storekeeper'])->prefix('storekeeper')->name('st
         ->name('breakdowns');
 });
 
+// ══════════════════════════════════════════════════════════════
+// TIMEKEEPER DASHBOARD
+// ══════════════════════════════════════════════════════════════
+
+Route::middleware(['auth', 'role:timekeeper'])->prefix('timekeeper')->name('timekeeper.')->group(function () {
+    Route::get('/dashboard', function () {
+        $today        = today();
+        $weekEnd      = today()->addDays(7);
+
+        // Schedules missing a driver or conductor (for alert panel)
+        $unassigned = \App\Models\Schedule::where('status', 'active')
+            ->whereDate('schedule_date', '>=', $today)
+            ->where(fn($q) => $q->whereNull('driver_id')->orWhereNull('conductor_id'))
+            ->with(['route', 'bus'])
+            ->orderBy('schedule_date')
+            ->orderBy('departure_time')
+            ->take(10)
+            ->get();
+
+        return view('timekeeper.dashboard', [
+            'todaySchedules'    => \App\Models\Schedule::where('status','active')
+                                    ->whereDate('schedule_date', $today)->count(),
+            'weekSchedules'     => \App\Models\Schedule::where('status','active')
+                                    ->whereBetween('schedule_date', [$today, $weekEnd])->count(),
+            'unassignedCount'   => $unassigned->count(),
+            'unassignedSchedules' => $unassigned,
+            'totalRosters'      => \App\Models\DutyRoster::whereDate('duty_date', $today)->count(),
+        ]);
+    })->name('dashboard');
+});
+
+// ══════════════════════════════════════════════════════════════
+// DUTY ROSTERS (timekeeper + admin + officer)
+// ══════════════════════════════════════════════════════════════
+
+Route::middleware(['auth', 'role:admin,executive_officer,timekeeper'])->group(function () {
+    Route::resource('rosters', App\Http\Controllers\DutyRosterController::class)
+        ->except(['edit', 'update', 'show']);
+});
+
 require __DIR__.'/auth.php';
