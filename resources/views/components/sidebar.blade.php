@@ -8,6 +8,7 @@ $nav = [
         ['label' => 'Buses',           'route' => 'buses.index'],
         ['label' => 'Routes',          'route' => 'routes.index'],
         ['label' => 'Schedules',       'route' => 'schedules.index'],
+        ['label' => 'Duty Rosters',    'route' => 'rosters.index'],
         ['label' => 'Bookings',        'route' => 'bookings.index'],
         ['label' => 'Breakdowns',      'route' => 'breakdowns.index'],
         ['label' => 'Inventory',       'route' => 'inventory.index'],
@@ -20,6 +21,7 @@ $nav = [
         ['label' => 'Buses',           'route' => 'buses.index'],
         ['label' => 'Routes',          'route' => 'routes.index'],
         ['label' => 'Schedules',       'route' => 'schedules.index'],
+        ['label' => 'Duty Rosters',    'route' => 'rosters.index'],
         ['label' => 'Bookings',        'route' => 'bookings.index'],
         ['label' => 'Breakdowns',      'route' => 'breakdowns.index'],
         ['label' => 'Messages',        'route' => 'chatify'],
@@ -28,6 +30,7 @@ $nav = [
         ['label' => 'Dashboard',       'route' => 'timekeeper.dashboard'],
         ['label' => 'Schedules',       'route' => 'schedules.index'],
         ['label' => 'Duty Rosters',    'route' => 'rosters.index'],
+        ['label' => 'My Profile',   'route' => 'profile.edit'],
         ['label' => 'Messages',        'route' => 'chatify'],
     ],
     'storekeeper' => [
