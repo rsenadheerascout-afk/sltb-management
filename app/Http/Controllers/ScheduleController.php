@@ -22,7 +22,7 @@ class ScheduleController extends Controller
             ->where('status', 'active')
             ->where('schedule_date', '>=', today())
             ->when($request->route_id, fn($q) => $q->where('route_id', $request->route_id))
-            ->when($request->date,     fn($q) => $q->where('schedule_date', $request->date))
+            ->when($request->date, fn($q) => $q->where('schedule_date', $request->date))
             ->orderBy('schedule_date')
             ->orderBy('departure_time')
             ->paginate(20)
@@ -51,9 +51,9 @@ class ScheduleController extends Controller
 
     public function create()
     {
-        $routes     = Route::where('status', 'active')->orderBy('name')->get();
-        $buses      = Bus::where('status', 'active')->orderBy('depot_reg_no')->get();
-        $drivers    = User::whereIn('role', ['driver'])->where('status', 'active')->orderBy('name')->get();
+        $routes = Route::where('status', 'active')->orderBy('name')->get();
+        $buses = Bus::where('status', 'active')->orderBy('depot_reg_no')->get();
+        $drivers = User::whereIn('role', ['driver'])->where('status', 'active')->orderBy('name')->get();
         $conductors = User::whereIn('role', ['conductor'])->where('status', 'active')->orderBy('name')->get();
 
         return view('schedules.create', compact('routes', 'buses', 'drivers', 'conductors'));
@@ -66,8 +66,12 @@ class ScheduleController extends Controller
             ['created_by' => auth()->id()]
         ));
 
-        $this->logActivity('created', 'Schedule', $schedule->id,
-            "Schedule created: {$schedule->route->name} on {$schedule->schedule_date}");
+        $this->logActivity(
+            'created',
+            'Schedule',
+            $schedule->id,
+            "Schedule created: {$schedule->route->name} on {$schedule->schedule_date}"
+        );
 
         return redirect()->route('schedules.index')
             ->with('success', 'Schedule created successfully.');
@@ -81,9 +85,9 @@ class ScheduleController extends Controller
 
     public function edit(Schedule $schedule)
     {
-        $routes     = Route::where('status', 'active')->orderBy('name')->get();
-        $buses      = Bus::where('status', 'active')->orderBy('depot_reg_no')->get();
-        $drivers    = User::where('role', 'driver')->where('status', 'active')->orderBy('name')->get();
+        $routes = Route::where('status', 'active')->orderBy('name')->get();
+        $buses = Bus::where('status', 'active')->orderBy('depot_reg_no')->get();
+        $drivers = User::where('role', 'driver')->where('status', 'active')->orderBy('name')->get();
         $conductors = User::where('role', 'conductor')->where('status', 'active')->orderBy('name')->get();
 
         return view('schedules.edit', compact('schedule', 'routes', 'buses', 'drivers', 'conductors'));
@@ -112,14 +116,32 @@ class ScheduleController extends Controller
     // Returns JSON for FullCalendar (used by timekeeper)
     public function calendarEvents()
     {
-        $schedules = Schedule::with(['route', 'bus'])
-            ->where('status', 'active')
+        $schedules = Schedule::with(['route', 'bus', 'driver'])
+            ->whereIn('status', ['active', 'inactive'])
             ->get()
             ->map(fn($s) => [
-                'id'    => $s->id,
-                'title' => $s->route->name . ' — ' . $s->bus->depot_reg_no,
+                'id' => $s->id,
+                'title' => $s->route->name . ' · ' . $s->bus->depot_reg_no,
                 'start' => $s->schedule_date->format('Y-m-d') . 'T' . $s->departure_time,
-                'url'   => route('schedules.show', $s),
+                'end' => $s->schedule_date->format('Y-m-d') . 'T' . $s->arrival_time,
+                'url' => route('schedules.show', $s),
+                'backgroundColor' => match (true) {
+                    $s->status === 'inactive' => '#9CA3AF',
+                    is_null($s->driver_id) => '#F59E0B',
+                    is_null($s->conductor_id) => '#F97316',
+                    default => '#2563EB',
+                },
+                'borderColor' => match (true) {
+                    $s->status === 'inactive' => '#6B7280',
+                    is_null($s->driver_id) => '#D97706',
+                    is_null($s->conductor_id) => '#EA580C',
+                    default => '#1D4ED8',
+                },
+                'extendedProps' => [
+                    'driver' => $s->driver?->name ?? 'Unassigned',
+                    'bus' => $s->bus->depot_reg_no,
+                    'departure' => \Carbon\Carbon::parse($s->departure_time)->format('h:i A'),
+                ],
             ]);
 
         return response()->json($schedules);
