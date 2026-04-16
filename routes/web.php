@@ -109,8 +109,10 @@ Route::middleware(['auth', 'role:storekeeper'])->prefix('storekeeper')->name('st
 // ══════════════════════════════════════════════════════════════
 
 Route::middleware(['auth', 'role:driver,conductor'])->prefix('driver')->name('driver.')->group(function () {
-    Route::get('/dashboard', fn() => view('driver.dashboard'))->name('dashboard');
-    Route::get('/schedule', fn() => view('driver.schedule'))->name('schedule');
+    Route::get('/dashboard', [App\Http\Controllers\DriverController::class, 'dashboard'])
+        ->name('dashboard');
+    Route::get('/schedule', [App\Http\Controllers\DriverController::class, 'schedule'])
+        ->name('schedule');
 });
 
 // ══════════════════════════════════════════════════════════════
