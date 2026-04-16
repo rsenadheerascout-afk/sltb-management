@@ -311,10 +311,26 @@ Route::middleware(['auth', 'role:admin,executive_officer'])->group(function () {
         ->name('breakdowns.resolve');
 });
 
-// Both admin/officer AND driver/conductor can view a report
-Route::middleware(['auth', 'role:admin,executive_officer,driver,conductor'])->group(function () {
+// Both admin/officer AND driver/conductor + storekeeper can view a report
+Route::middleware(['auth', 'role:admin,executive_officer,driver,conductor,storekeeper'])->group(function () {
     Route::get('/breakdowns/{breakdown}', [App\Http\Controllers\BreakdownReportController::class, 'show'])
         ->name('breakdowns.show');
+});
+
+// ══════════════════════════════════════════════════════════════
+// STOREKEEPER DASHBOARD
+// ══════════════════════════════════════════════════════════════
+
+Route::middleware(['auth', 'role:storekeeper'])->prefix('storekeeper')->name('storekeeper.')->group(function () {
+    Route::get('/dashboard', fn() => view('storekeeper.dashboard', [
+        'sparesNeeded' => \App\Models\BreakdownReport::where('response_action', 'spare_parts')
+                            ->whereIn('status', ['approved', 'in_progress'])
+                            ->count(),
+    ]))->name('dashboard');
+
+    // Storekeeper-specific breakdown list (spare parts only)
+    Route::get('/breakdowns', [App\Http\Controllers\BreakdownReportController::class, 'storekeeperIndex'])
+        ->name('breakdowns');
 });
 
 require __DIR__.'/auth.php';

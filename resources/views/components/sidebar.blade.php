@@ -34,6 +34,8 @@ $nav = [
         ['label' => 'Dashboard',       'route' => 'storekeeper.dashboard'],
         ['label' => 'Inventory',       'route' => 'inventory.index'],
         ['label' => 'Breakdowns',      'route' => 'breakdowns.index'],
+        ['label' => 'Spare Parts Jobs', 'route' => 'storekeeper.breakdowns'],
+        ['label' => 'My Profile',      'route' => 'profile.edit'],
         ['label' => 'Messages',        'route' => 'chatify'],
     ],
     'driver' => [
