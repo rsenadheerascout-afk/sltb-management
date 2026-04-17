@@ -45,12 +45,14 @@ $nav = [
         ['label' => 'Dashboard',       'route' => 'driver.dashboard'],
         ['label' => 'My Schedule',     'route' => 'driver.schedule'],
         ['label' => 'Report Breakdown','route' => 'breakdowns.create'],
+        ['label' => 'My Profile',       'route' => 'profile.edit'],
         ['label' => 'Messages',        'route' => 'chatify'],
     ],
     'conductor' => [
         ['label' => 'Dashboard',       'route' => 'driver.dashboard'],
         ['label' => 'My Schedule',     'route' => 'driver.schedule'],
         ['label' => 'Report Breakdown','route' => 'breakdowns.create'],
+        ['label' => 'My Profile',       'route' => 'profile.edit'],
         ['label' => 'Messages',        'route' => 'chatify'],
     ],
     'employee' => [
