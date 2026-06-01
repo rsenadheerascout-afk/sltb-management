@@ -92,17 +92,17 @@ Route::middleware(['auth', 'role:executive_officer'])->prefix('officer')->name('
 // TIMEKEEPER DASHBOARD
 // ══════════════════════════════════════════════════════════════
 
-Route::middleware(['auth', 'role:timekeeper'])->prefix('timekeeper')->name('timekeeper.')->group(function () {
-    Route::get('/dashboard', fn() => view('timekeeper.dashboard'))->name('dashboard');
-});
+// Route::middleware(['auth', 'role:timekeeper'])->prefix('timekeeper')->name('timekeeper.')->group(function () {
+//     Route::get('/dashboard', fn() => view('timekeeper.dashboard'))->name('dashboard');
+// });
 
 // ══════════════════════════════════════════════════════════════
 // STOREKEEPER DASHBOARD
 // ══════════════════════════════════════════════════════════════
 
-Route::middleware(['auth', 'role:storekeeper'])->prefix('storekeeper')->name('storekeeper.')->group(function () {
-    Route::get('/dashboard', fn() => view('storekeeper.dashboard'))->name('dashboard');
-});
+// Route::middleware(['auth', 'role:storekeeper'])->prefix('storekeeper')->name('storekeeper.')->group(function () {
+//     Route::get('/dashboard', fn() => view('storekeeper.dashboard'))->name('dashboard');
+// });
 
 // ══════════════════════════════════════════════════════════════
 // DRIVER / CONDUCTOR DASHBOARD
@@ -324,13 +324,18 @@ Route::middleware(['auth', 'role:admin,executive_officer,driver,conductor,storek
 // ══════════════════════════════════════════════════════════════
 
 Route::middleware(['auth', 'role:storekeeper'])->prefix('storekeeper')->name('storekeeper.')->group(function () {
-    Route::get('/dashboard', fn() => view('storekeeper.dashboard', [
-        'sparesNeeded' => \App\Models\BreakdownReport::where('response_action', 'spare_parts')
-                            ->whereIn('status', ['approved', 'in_progress'])
-                            ->count(),
-    ]))->name('dashboard');
+    Route::get('/dashboard', function () {
+        return view('storekeeper.dashboard', [
+            'sparesNeeded'  => \App\Models\BreakdownReport::where('response_action', 'spare_parts')
+                                ->whereIn('status', ['approved', 'in_progress'])
+                                ->count(),
+            'totalItems'    => \App\Models\InventoryItem::count(),
+            'lowStockItems' => \App\Models\InventoryItem::lowStock()->count(),
+            'recentReleases'=> \App\Models\InventoryRelease::with(['inventoryItem', 'releasedBy'])
+                                ->latest()->take(5)->get(),
+        ]);
+    })->name('dashboard');
 
-    // Storekeeper-specific breakdown list (spare parts only)
     Route::get('/breakdowns', [App\Http\Controllers\BreakdownReportController::class, 'storekeeperIndex'])
         ->name('breakdowns');
 });
@@ -373,6 +378,25 @@ Route::middleware(['auth', 'role:timekeeper'])->prefix('timekeeper')->name('time
 Route::middleware(['auth', 'role:admin,executive_officer,timekeeper'])->group(function () {
     Route::resource('rosters', App\Http\Controllers\DutyRosterController::class)
         ->except(['edit', 'update', 'show']);
+});
+
+// ══════════════════════════════════════════════════════════════
+// INVENTORY (storekeeper + admin + officer)
+// ══════════════════════════════════════════════════════════════
+
+Route::middleware(['auth', 'role:storekeeper,admin,executive_officer'])->group(function () {
+
+    Route::resource('inventory', App\Http\Controllers\InventoryController::class)
+        ->except(['destroy']);
+
+    Route::post('inventory/{inventory}/release', [App\Http\Controllers\InventoryController::class, 'release'])
+        ->name('inventory.release');
+
+    Route::post('inventory/{inventory}/restock', [App\Http\Controllers\InventoryController::class, 'restock'])
+        ->name('inventory.restock');
+
+    Route::get('inventory-report/pdf', [App\Http\Controllers\InventoryController::class, 'downloadReport'])
+        ->name('inventory.report');
 });
 
 require __DIR__.'/auth.php';
