@@ -16,7 +16,8 @@
             class="bg-white rounded-xl border {{ $pendingRegistrations > 0 ? 'border-amber-300 bg-amber-50' : 'border-gray-200' }} p-5 col-span-1 block hover:shadow-sm transition">
             <p class="text-xs text-gray-400 uppercase tracking-wide">Pending Applications</p>
             <p class="text-3xl font-bold {{ $pendingRegistrations > 0 ? 'text-amber-600' : 'text-gray-800' }} mt-2">
-                {{ $pendingRegistrations }}</p>
+                {{ $pendingRegistrations }}
+            </p>
         </a>
         <div class="bg-white rounded-xl border border-gray-200 p-5 col-span-1">
             <p class="text-xs text-gray-400 uppercase tracking-wide">Today's Revenue</p>
@@ -43,6 +44,14 @@
             class="bg-white rounded-xl border border-gray-200 p-5 hover:border-blue-300 transition-colors">
             <p class="text-sm font-medium text-gray-700">Manage schedules</p>
             <p class="text-xs text-gray-400 mt-1">Create and assign schedules</p>
+        </a>
+        {{-- New stats for inventory --}}
+        <a href="{{ route('inventory.index', ['stock' => 'low']) }}"
+            class="bg-white rounded-xl border {{ $lowStockItems > 0 ? 'border-amber-300 bg-amber-50' : 'border-gray-200' }} p-5 col-span-1 block hover:shadow-sm transition">
+            <p class="text-xs text-gray-400 uppercase tracking-wide">Low Stock Items</p>
+            <p class="text-3xl font-bold {{ $lowStockItems > 0 ? 'text-amber-600' : 'text-gray-800' }} mt-2">
+                {{ $lowStockItems }}
+            </p>
         </a>
     </div>
 </x-dashboard-layout>

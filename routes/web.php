@@ -63,15 +63,30 @@ Route::middleware('auth')->group(function () {
 // ADMIN DASHBOARD
 // ══════════════════════════════════════════════════════════════
 
+// Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+//     Route::get('/dashboard', function () {
+//         return view('admin.dashboard', [
+//             'totalEmployees'       => \App\Models\User::where('role', '!=', 'admin')->count(),
+//             'activeBuses'          => 0,
+//             'todaySchedules'       => 0,
+//             'pendingRegistrations' => \App\Models\EmployeeRegistration::where('status', 'pending')->count(),
+//             'todayRevenue'         => \App\Models\Booking::whereDate('booked_at', today())->where('payment_status', 'paid')->sum('amount'),
+//             'totalBookings'        => \App\Models\Booking::where('payment_status', 'paid')->count(),
+//         ]);
+//     })->name('dashboard');
+// });
+
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', function () {
         return view('admin.dashboard', [
-            'totalEmployees'       => \App\Models\User::where('role', '!=', 'admin')->count(),
-            'activeBuses'          => 0,
-            'todaySchedules'       => 0,
+            'totalEmployees'    => \App\Models\User::where('role', '!=', 'admin')->count(),
+            'activeBuses'       => \App\Models\Bus::where('status', 'active')->count(),
+            'todaySchedules'    => \App\Models\Schedule::whereDate('schedule_date', today())->where('status', 'active')->count(),
             'pendingRegistrations' => \App\Models\EmployeeRegistration::where('status', 'pending')->count(),
             'todayRevenue'         => \App\Models\Booking::whereDate('booked_at', today())->where('payment_status', 'paid')->sum('amount'),
             'totalBookings'        => \App\Models\Booking::where('payment_status', 'paid')->count(),
+            'lowStockItems' => \App\Models\InventoryItem::lowStock()->count(),
+            'totalInventory' => \App\Models\InventoryItem::count(),
         ]);
     })->name('dashboard');
 });
@@ -233,18 +248,8 @@ Route::middleware(['auth', 'role:admin,executive_officer'])->group(function () {
         ->name('schedules.activate');
 });
 
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('admin.dashboard', [
-            'totalEmployees'    => \App\Models\User::where('role', '!=', 'admin')->count(),
-            'activeBuses'       => \App\Models\Bus::where('status', 'active')->count(),
-            'todaySchedules'    => \App\Models\Schedule::whereDate('schedule_date', today())->where('status', 'active')->count(),
-            'pendingRegistrations' => \App\Models\EmployeeRegistration::where('status', 'pending')->count(),
-            'todayRevenue'         => \App\Models\Booking::whereDate('booked_at', today())->where('payment_status', 'paid')->sum('amount'),
-            'totalBookings'        => \App\Models\Booking::where('payment_status', 'paid')->count(),
-        ]);
-    })->name('dashboard');
-});
+
+//admin dashboard routes found here, but moved to top of file to avoid merge conflicts with timekeeper/storekeeper dashboard routes
 
 // ══════════════════════════════════════════════════════════════
 // SEAT BOOKING — public, no auth required
