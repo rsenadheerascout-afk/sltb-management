@@ -63,15 +63,30 @@ Route::middleware('auth')->group(function () {
 // ADMIN DASHBOARD
 // ══════════════════════════════════════════════════════════════
 
+// Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+//     Route::get('/dashboard', function () {
+//         return view('admin.dashboard', [
+//             'totalEmployees'       => \App\Models\User::where('role', '!=', 'admin')->count(),
+//             'activeBuses'          => 0,
+//             'todaySchedules'       => 0,
+//             'pendingRegistrations' => \App\Models\EmployeeRegistration::where('status', 'pending')->count(),
+//             'todayRevenue'         => \App\Models\Booking::whereDate('booked_at', today())->where('payment_status', 'paid')->sum('amount'),
+//             'totalBookings'        => \App\Models\Booking::where('payment_status', 'paid')->count(),
+//         ]);
+//     })->name('dashboard');
+// });
+
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', function () {
         return view('admin.dashboard', [
-            'totalEmployees'       => \App\Models\User::where('role', '!=', 'admin')->count(),
-            'activeBuses'          => 0,
-            'todaySchedules'       => 0,
+            'totalEmployees'    => \App\Models\User::where('role', '!=', 'admin')->count(),
+            'activeBuses'       => \App\Models\Bus::where('status', 'active')->count(),
+            'todaySchedules'    => \App\Models\Schedule::whereDate('schedule_date', today())->where('status', 'active')->count(),
             'pendingRegistrations' => \App\Models\EmployeeRegistration::where('status', 'pending')->count(),
             'todayRevenue'         => \App\Models\Booking::whereDate('booked_at', today())->where('payment_status', 'paid')->sum('amount'),
             'totalBookings'        => \App\Models\Booking::where('payment_status', 'paid')->count(),
+            'lowStockItems' => \App\Models\InventoryItem::lowStock()->count(),
+            'totalInventory' => \App\Models\InventoryItem::count(),
         ]);
     })->name('dashboard');
 });
@@ -92,17 +107,17 @@ Route::middleware(['auth', 'role:executive_officer'])->prefix('officer')->name('
 // TIMEKEEPER DASHBOARD
 // ══════════════════════════════════════════════════════════════
 
-Route::middleware(['auth', 'role:timekeeper'])->prefix('timekeeper')->name('timekeeper.')->group(function () {
-    Route::get('/dashboard', fn() => view('timekeeper.dashboard'))->name('dashboard');
-});
+// Route::middleware(['auth', 'role:timekeeper'])->prefix('timekeeper')->name('timekeeper.')->group(function () {
+//     Route::get('/dashboard', fn() => view('timekeeper.dashboard'))->name('dashboard');
+// });
 
 // ══════════════════════════════════════════════════════════════
 // STOREKEEPER DASHBOARD
 // ══════════════════════════════════════════════════════════════
 
-Route::middleware(['auth', 'role:storekeeper'])->prefix('storekeeper')->name('storekeeper.')->group(function () {
-    Route::get('/dashboard', fn() => view('storekeeper.dashboard'))->name('dashboard');
-});
+// Route::middleware(['auth', 'role:storekeeper'])->prefix('storekeeper')->name('storekeeper.')->group(function () {
+//     Route::get('/dashboard', fn() => view('storekeeper.dashboard'))->name('dashboard');
+// });
 
 // ══════════════════════════════════════════════════════════════
 // DRIVER / CONDUCTOR DASHBOARD
@@ -233,18 +248,8 @@ Route::middleware(['auth', 'role:admin,executive_officer'])->group(function () {
         ->name('schedules.activate');
 });
 
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
-    Route::get('/dashboard', function () {
-        return view('admin.dashboard', [
-            'totalEmployees'    => \App\Models\User::where('role', '!=', 'admin')->count(),
-            'activeBuses'       => \App\Models\Bus::where('status', 'active')->count(),
-            'todaySchedules'    => \App\Models\Schedule::whereDate('schedule_date', today())->where('status', 'active')->count(),
-            'pendingRegistrations' => \App\Models\EmployeeRegistration::where('status', 'pending')->count(),
-            'todayRevenue'         => \App\Models\Booking::whereDate('booked_at', today())->where('payment_status', 'paid')->sum('amount'),
-            'totalBookings'        => \App\Models\Booking::where('payment_status', 'paid')->count(),
-        ]);
-    })->name('dashboard');
-});
+
+//admin dashboard routes found here, but moved to top of file to avoid merge conflicts with timekeeper/storekeeper dashboard routes
 
 // ══════════════════════════════════════════════════════════════
 // SEAT BOOKING — public, no auth required
@@ -324,13 +329,18 @@ Route::middleware(['auth', 'role:admin,executive_officer,driver,conductor,storek
 // ══════════════════════════════════════════════════════════════
 
 Route::middleware(['auth', 'role:storekeeper'])->prefix('storekeeper')->name('storekeeper.')->group(function () {
-    Route::get('/dashboard', fn() => view('storekeeper.dashboard', [
-        'sparesNeeded' => \App\Models\BreakdownReport::where('response_action', 'spare_parts')
-                            ->whereIn('status', ['approved', 'in_progress'])
-                            ->count(),
-    ]))->name('dashboard');
+    Route::get('/dashboard', function () {
+        return view('storekeeper.dashboard', [
+            'sparesNeeded'  => \App\Models\BreakdownReport::where('response_action', 'spare_parts')
+                                ->whereIn('status', ['approved', 'in_progress'])
+                                ->count(),
+            'totalItems'    => \App\Models\InventoryItem::count(),
+            'lowStockItems' => \App\Models\InventoryItem::lowStock()->count(),
+            'recentReleases'=> \App\Models\InventoryRelease::with(['inventoryItem', 'releasedBy'])
+                                ->latest()->take(5)->get(),
+        ]);
+    })->name('dashboard');
 
-    // Storekeeper-specific breakdown list (spare parts only)
     Route::get('/breakdowns', [App\Http\Controllers\BreakdownReportController::class, 'storekeeperIndex'])
         ->name('breakdowns');
 });
@@ -373,6 +383,25 @@ Route::middleware(['auth', 'role:timekeeper'])->prefix('timekeeper')->name('time
 Route::middleware(['auth', 'role:admin,executive_officer,timekeeper'])->group(function () {
     Route::resource('rosters', App\Http\Controllers\DutyRosterController::class)
         ->except(['edit', 'update', 'show']);
+});
+
+// ══════════════════════════════════════════════════════════════
+// INVENTORY (storekeeper + admin + officer)
+// ══════════════════════════════════════════════════════════════
+
+Route::middleware(['auth', 'role:storekeeper,admin,executive_officer'])->group(function () {
+
+    Route::resource('inventory', App\Http\Controllers\InventoryController::class)
+        ->except(['destroy']);
+
+    Route::post('inventory/{inventory}/release', [App\Http\Controllers\InventoryController::class, 'release'])
+        ->name('inventory.release');
+
+    Route::post('inventory/{inventory}/restock', [App\Http\Controllers\InventoryController::class, 'restock'])
+        ->name('inventory.restock');
+
+    Route::get('inventory-report/pdf', [App\Http\Controllers\InventoryController::class, 'downloadReport'])
+        ->name('inventory.report');
 });
 
 require __DIR__.'/auth.php';
