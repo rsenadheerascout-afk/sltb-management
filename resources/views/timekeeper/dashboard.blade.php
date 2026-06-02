@@ -1,4 +1,5 @@
 <x-dashboard-layout title="Timekeeper Dashboard">
+    <x-charts />
 
 {{-- Stats row --}}
 <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -150,6 +151,41 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
     calendar.render();
+});
+</script>
+{{-- Schedules per day bar chart --}}
+<div class="bg-white rounded-xl border border-gray-200 p-5 mt-5">
+    <h3 class="text-sm font-semibold text-gray-800 mb-4">Schedules — Next 14 Days</h3>
+    <div style="height:180px;position:relative;">
+        <canvas id="timekeeperScheduleChart"></canvas>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    fetch('{{ route("analytics.timekeeper") }}')
+        .then(r => r.json())
+        .then(data => {
+            const sd = data.schedule_by_day;
+            renderChart('timekeeperScheduleChart', {
+                type: 'bar',
+                data: {
+                    labels: sd.map(d => d.date),
+                    datasets: [{
+                        label: 'Schedules',
+                        data: sd.map(d => d.count),
+                        backgroundColor: sd.map(d =>
+                            d.date === '{{ today()->format("d M") }}'
+                                ? PALETTE.blue.bg : 'rgba(37,99,235,0.4)'
+                        ),
+                        borderColor: PALETTE.blue.border,
+                        borderRadius: 4,
+                        borderWidth: 1,
+                    }]
+                },
+                options: barOptions('Schedules')
+            });
+        });
 });
 </script>
 </x-dashboard-layout>
