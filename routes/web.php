@@ -85,8 +85,15 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
             'pendingRegistrations' => \App\Models\EmployeeRegistration::where('status', 'pending')->count(),
             'todayRevenue'         => \App\Models\Booking::whereDate('booked_at', today())->where('payment_status', 'paid')->sum('amount'),
             'totalBookings'        => \App\Models\Booking::where('payment_status', 'paid')->count(),
+            'openBreakdowns'       => \App\Models\BreakdownReport::whereIn('status',
+                                        ['pending','approved','in_progress'])->count(),
             'lowStockItems' => \App\Models\InventoryItem::lowStock()->count(),
             'totalInventory' => \App\Models\InventoryItem::count(),
+            'recentBookings'       => \App\Models\Booking::with(['schedule.route'])
+                                        ->where('payment_status','paid')
+                                        ->latest('booked_at')->take(6)->get(),
+            'recentBreakdowns'     => \App\Models\BreakdownReport::with(['bus','reportedBy'])
+                                        ->latest()->take(5)->get(),
         ]);
     })->name('dashboard');
 });
