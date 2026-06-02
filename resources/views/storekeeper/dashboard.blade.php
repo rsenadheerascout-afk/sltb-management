@@ -193,4 +193,5 @@ document.addEventListener('DOMContentLoaded', function () {
         });
 });
 </script>
+
 </x-dashboard-layout>
