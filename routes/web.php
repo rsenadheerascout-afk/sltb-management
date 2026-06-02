@@ -106,6 +106,19 @@ Route::middleware(['auth', 'role:executive_officer'])->prefix('officer')->name('
     Route::get('/dashboard', function () {
         return view('officer.dashboard', [
             'pendingRegistrations' => \App\Models\EmployeeRegistration::where('status', 'pending')->count(),
+            'openBreakdowns'       => \App\Models\BreakdownReport::whereIn('status',
+                                        ['pending','approved','in_progress'])->count(),
+            'todaySchedules'       => \App\Models\Schedule::where('status','active')
+                                        ->whereDate('schedule_date', today())->count(),
+            'unassignedSchedules'  => \App\Models\Schedule::where('status','active')
+                                        ->whereDate('schedule_date', '>=', today())
+                                        ->where(fn($q) => $q->whereNull('driver_id')->orWhereNull('conductor_id'))
+                                        ->count(),
+            'totalBookings'        => \App\Models\Booking::where('payment_status','paid')->count(),
+            'monthRevenue'         => \App\Models\Booking::where('payment_status','paid')
+                                        ->whereMonth('booked_at', now()->month)
+                                        ->whereYear('booked_at', now()->year)
+                                        ->sum('amount'),
         ]);
     })->name('dashboard');
 });
