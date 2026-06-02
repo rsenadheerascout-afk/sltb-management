@@ -404,4 +404,19 @@ Route::middleware(['auth', 'role:storekeeper,admin,executive_officer'])->group(f
         ->name('inventory.report');
 });
 
+// ══════════════════════════════════════════════════════════════
+// ANALYTICS DATA ENDPOINTS (JSON — used by Chart.js)
+// ══════════════════════════════════════════════════════════════
+
+Route::middleware('auth')->prefix('analytics')->name('analytics.')->group(function () {
+    Route::get('/admin',       [App\Http\Controllers\AnalyticsController::class, 'adminData'])
+        ->middleware('role:admin')->name('admin');
+    Route::get('/officer',     [App\Http\Controllers\AnalyticsController::class, 'officerData'])
+        ->middleware('role:executive_officer')->name('officer');
+    Route::get('/timekeeper',  [App\Http\Controllers\AnalyticsController::class, 'timekeeperData'])
+        ->middleware('role:timekeeper')->name('timekeeper');
+    Route::get('/storekeeper', [App\Http\Controllers\AnalyticsController::class, 'storekeeperData'])
+        ->middleware('role:storekeeper')->name('storekeeper');
+});
+
 require __DIR__.'/auth.php';
