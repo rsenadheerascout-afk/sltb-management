@@ -9,7 +9,7 @@ return [
     // Chatify uses the default 'web' guard — employees only, no passengers
     'user_model'    => App\Models\User::class,
 
-    'middleware'    => ['web', 'auth'],
+    'middleware'    => ['web', 'auth', 'employee.only'],
 
     'name'          => env('APP_NAME', 'SLTB Messaging'),
 
@@ -29,7 +29,7 @@ return [
     'routes' => [
         'custom' => env('CHATIFY_CUSTOM_ROUTES', false),
         'prefix'     => 'messaging',
-        'middleware' => ['web', 'auth'],
+        'middleware' => ['web', 'auth', 'employee.only'],
         'namespace' => env('CHATIFY_ROUTES_NAMESPACE', 'Chatify\Http\Controllers'),
     ],
     'api_routes' => [
