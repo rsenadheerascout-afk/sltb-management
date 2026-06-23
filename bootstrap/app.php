@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \App\Http\Middleware\RoleMiddleware::class,
             'passenger' => \App\Http\Middleware\PassengerMiddleware::class,
+            'employee.only'   => \App\Http\Middleware\EnsureNotPassenger::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
