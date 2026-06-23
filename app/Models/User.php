@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Chatify\Traits\UUID;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, UUID;
 
     protected $fillable = [
         'name',
@@ -21,6 +22,7 @@ class User extends Authenticatable
         'employee_id',
         'status',
         'is_approved',
+        'avatar',
     ];
 
     protected $hidden = ['password', 'remember_token'];
@@ -53,11 +55,23 @@ class User extends Authenticatable
         return $this->hasMany(SltbNotification::class);
     }
 
-    // Add this to app/Models/User.php inside the class
     public function getAvatarUrlAttribute(): string
     {
         return $this->avatar
             ? asset('storage/' . $this->avatar)
             : asset('images/default-avatar.png');
+    }
+
+    // ── Chatify compatibility ────────────────────────────────────────────
+    public function getAvatarForChatify(): string
+    {
+        return $this->avatar
+            ? asset('storage/' . $this->avatar)
+            : asset('images/default-avatar.png');
+    }
+
+    public function getActiveStatusAttribute(): int
+    {
+        return $this->isActive() && $this->isApproved() ? 1 : 0;
     }
 }
