@@ -6,7 +6,12 @@ return [
     | Messenger display name
     |-------------------------------------
     */
-    'name' => env('CHATIFY_NAME', 'Chatify Messenger'),
+    // Chatify uses the default 'web' guard — employees only, no passengers
+    'user_model'    => App\Models\User::class,
+
+    'middleware'    => ['web', 'auth'],
+
+    'name'          => env('APP_NAME', 'SLTB Messaging'),
 
     /*
     |-------------------------------------
@@ -23,8 +28,8 @@ return [
     */
     'routes' => [
         'custom' => env('CHATIFY_CUSTOM_ROUTES', false),
-        'prefix' => env('CHATIFY_ROUTES_PREFIX', 'chatify'),
-        'middleware' => env('CHATIFY_ROUTES_MIDDLEWARE', ['web','auth']),
+        'prefix'     => 'messaging',
+        'middleware' => ['web', 'auth'],
         'namespace' => env('CHATIFY_ROUTES_NAMESPACE', 'Chatify\Http\Controllers'),
     ],
     'api_routes' => [
@@ -40,9 +45,9 @@ return [
     */
     'pusher' => [
         'debug' => env('APP_DEBUG', false),
-        'key' => env('PUSHER_APP_KEY'),
-        'secret' => env('PUSHER_APP_SECRET'),
-        'app_id' => env('PUSHER_APP_ID'),
+        'key' => env('PUSHER_APP_KEY', ''),
+        'secret' => env('PUSHER_APP_SECRET', ''),
+        'app_id' => env('PUSHER_APP_ID', ''),
         'options' => [
             'cluster' => env('PUSHER_APP_CLUSTER', 'mt1'),
             'host' => env('PUSHER_HOST') ?: 'api-'.env('PUSHER_APP_CLUSTER', 'mt1').'.pusher.com',
@@ -59,8 +64,8 @@ return [
     |-------------------------------------
     */
     'user_avatar' => [
-        'folder' => 'users-avatar',
-        'default' => 'avatar.png',
+        'folder' => 'avatars',
+        'default' => 'default-avatar.png',
     ],
 
     /*
@@ -72,7 +77,8 @@ return [
     |-------------------------------------
     */
     'gravatar' => [
-        'enabled' => true,
+        'enabled' => false,
+        'default' => 'mm',
         'image_size' => 200,
         'imageset' => 'identicon'
     ],
@@ -82,13 +88,20 @@ return [
     | Attachments
     |-------------------------------------
     */
+    // File upload config
     'attachments' => [
         'folder' => 'attachments',
         'download_route_name' => 'attachments.download',
-        'allowed_images' => (array) ['png','jpg','jpeg','gif'],
-        'allowed_files' => (array) ['zip','rar','txt'],
-        'max_upload_size' => env('CHATIFY_MAX_FILE_SIZE', 150), // MB
+        'allowed_images' => ['png', 'jpg', 'jpeg', 'gif', 'webp'],
+        'allowed_files'  => ['zip', 'rar', 'txt', 'pdf', 'doc', 'docx'],
+        'max_upload_size' => 5, // MB
     ],
+
+    'last_active_indicator' => true,
+    'archive_pagination'    => 30,
+    'pagination_count'      => 30,
+    'online_indicator'      => true,
+    'online_timeout'        => 30,
 
     /*
     |-------------------------------------
