@@ -30,6 +30,7 @@
                     <th class="px-4 py-3 text-left text-gray-500 font-medium">Action</th>
                 </tr>
             </thead>
+            
             <tbody class="divide-y divide-gray-100">
                 @forelse($reports as $report)
                     <tr class="hover:bg-gray-50">
