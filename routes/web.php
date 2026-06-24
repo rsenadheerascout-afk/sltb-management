@@ -23,13 +23,13 @@ Route::get('/apply/success', [App\Http\Controllers\EmployeeRegistrationControlle
 // ══════════════════════════════════════════════════════════════
 
 Route::get('/dashboard', function () {
-    return match(auth()->user()->role) {
-        'admin'              => redirect()->route('admin.dashboard'),
-        'executive_officer'  => redirect()->route('officer.dashboard'),
-        'timekeeper'         => redirect()->route('timekeeper.dashboard'),
-        'storekeeper'        => redirect()->route('storekeeper.dashboard'),
-        'driver', 'conductor'=> redirect()->route('driver.dashboard'),
-        default              => redirect()->route('employee.dashboard'),
+    return match (auth()->user()->role) {
+        'admin' => redirect()->route('admin.dashboard'),
+        'executive_officer' => redirect()->route('officer.dashboard'),
+        'timekeeper' => redirect()->route('timekeeper.dashboard'),
+        'storekeeper' => redirect()->route('storekeeper.dashboard'),
+        'driver', 'conductor' => redirect()->route('driver.dashboard'),
+        default => redirect()->route('employee.dashboard'),
     };
 })->middleware(['auth', 'verified'])->name('dashboard');
 
@@ -79,21 +79,23 @@ Route::middleware('auth')->group(function () {
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', function () {
         return view('admin.dashboard', [
-            'totalEmployees'    => \App\Models\User::where('role', '!=', 'admin')->count(),
-            'activeBuses'       => \App\Models\Bus::where('status', 'active')->count(),
-            'todaySchedules'    => \App\Models\Schedule::whereDate('schedule_date', today())->where('status', 'active')->count(),
+            'totalEmployees' => \App\Models\User::where('role', '!=', 'admin')->count(),
+            'activeBuses' => \App\Models\Bus::where('status', 'active')->count(),
+            'todaySchedules' => \App\Models\Schedule::whereDate('schedule_date', today())->where('status', 'active')->count(),
             'pendingRegistrations' => \App\Models\EmployeeRegistration::where('status', 'pending')->count(),
-            'todayRevenue'         => \App\Models\Booking::whereDate('booked_at', today())->where('payment_status', 'paid')->sum('amount'),
-            'totalBookings'        => \App\Models\Booking::where('payment_status', 'paid')->count(),
-            'openBreakdowns'       => \App\Models\BreakdownReport::whereIn('status',
-                                        ['pending','approved','in_progress'])->count(),
+            'todayRevenue' => \App\Models\Booking::whereDate('booked_at', today())->where('payment_status', 'paid')->sum('amount'),
+            'totalBookings' => \App\Models\Booking::where('payment_status', 'paid')->count(),
+            'openBreakdowns' => \App\Models\BreakdownReport::whereIn(
+                'status',
+                ['pending', 'approved', 'in_progress']
+            )->count(),
             'lowStockItems' => \App\Models\InventoryItem::lowStock()->count(),
             'totalInventory' => \App\Models\InventoryItem::count(),
-            'recentBookings'       => \App\Models\Booking::with(['schedule.route'])
-                                        ->where('payment_status','paid')
-                                        ->latest('booked_at')->take(6)->get(),
-            'recentBreakdowns'     => \App\Models\BreakdownReport::with(['bus','reportedBy'])
-                                        ->latest()->take(5)->get(),
+            'recentBookings' => \App\Models\Booking::with(['schedule.route'])
+                ->where('payment_status', 'paid')
+                ->latest('booked_at')->take(6)->get(),
+            'recentBreakdowns' => \App\Models\BreakdownReport::with(['bus', 'reportedBy'])
+                ->latest()->take(5)->get(),
         ]);
     })->name('dashboard');
 });
@@ -106,19 +108,21 @@ Route::middleware(['auth', 'role:executive_officer'])->prefix('officer')->name('
     Route::get('/dashboard', function () {
         return view('officer.dashboard', [
             'pendingRegistrations' => \App\Models\EmployeeRegistration::where('status', 'pending')->count(),
-            'openBreakdowns'       => \App\Models\BreakdownReport::whereIn('status',
-                                        ['pending','approved','in_progress'])->count(),
-            'todaySchedules'       => \App\Models\Schedule::where('status','active')
-                                        ->whereDate('schedule_date', today())->count(),
-            'unassignedSchedules'  => \App\Models\Schedule::where('status','active')
-                                        ->whereDate('schedule_date', '>=', today())
-                                        ->where(fn($q) => $q->whereNull('driver_id')->orWhereNull('conductor_id'))
-                                        ->count(),
-            'totalBookings'        => \App\Models\Booking::where('payment_status','paid')->count(),
-            'monthRevenue'         => \App\Models\Booking::where('payment_status','paid')
-                                        ->whereMonth('booked_at', now()->month)
-                                        ->whereYear('booked_at', now()->year)
-                                        ->sum('amount'),
+            'openBreakdowns' => \App\Models\BreakdownReport::whereIn(
+                'status',
+                ['pending', 'approved', 'in_progress']
+            )->count(),
+            'todaySchedules' => \App\Models\Schedule::where('status', 'active')
+                ->whereDate('schedule_date', today())->count(),
+            'unassignedSchedules' => \App\Models\Schedule::where('status', 'active')
+                ->whereDate('schedule_date', '>=', today())
+                ->where(fn($q) => $q->whereNull('driver_id')->orWhereNull('conductor_id'))
+                ->count(),
+            'totalBookings' => \App\Models\Booking::where('payment_status', 'paid')->count(),
+            'monthRevenue' => \App\Models\Booking::where('payment_status', 'paid')
+                ->whereMonth('booked_at', now()->month)
+                ->whereYear('booked_at', now()->year)
+                ->sum('amount'),
         ]);
     })->name('dashboard');
 });
@@ -355,13 +359,13 @@ Route::middleware(['auth', 'role:admin,executive_officer,driver,conductor,storek
 Route::middleware(['auth', 'role:storekeeper'])->prefix('storekeeper')->name('storekeeper.')->group(function () {
     Route::get('/dashboard', function () {
         return view('storekeeper.dashboard', [
-            'sparesNeeded'  => \App\Models\BreakdownReport::where('response_action', 'spare_parts')
-                                ->whereIn('status', ['approved', 'in_progress'])
-                                ->count(),
-            'totalItems'    => \App\Models\InventoryItem::count(),
+            'sparesNeeded' => \App\Models\BreakdownReport::where('response_action', 'spare_parts')
+                ->whereIn('status', ['approved', 'in_progress'])
+                ->count(),
+            'totalItems' => \App\Models\InventoryItem::count(),
             'lowStockItems' => \App\Models\InventoryItem::lowStock()->count(),
-            'recentReleases'=> \App\Models\InventoryRelease::with(['inventoryItem', 'releasedBy'])
-                                ->latest()->take(5)->get(),
+            'recentReleases' => \App\Models\InventoryRelease::with(['inventoryItem', 'releasedBy'])
+                ->latest()->take(5)->get(),
         ]);
     })->name('dashboard');
 
@@ -375,8 +379,8 @@ Route::middleware(['auth', 'role:storekeeper'])->prefix('storekeeper')->name('st
 
 Route::middleware(['auth', 'role:timekeeper'])->prefix('timekeeper')->name('timekeeper.')->group(function () {
     Route::get('/dashboard', function () {
-        $today        = today();
-        $weekEnd      = today()->addDays(7);
+        $today = today();
+        $weekEnd = today()->addDays(7);
 
         // Schedules missing a driver or conductor (for alert panel)
         $unassigned = \App\Models\Schedule::where('status', 'active')
@@ -389,13 +393,13 @@ Route::middleware(['auth', 'role:timekeeper'])->prefix('timekeeper')->name('time
             ->get();
 
         return view('timekeeper.dashboard', [
-            'todaySchedules'    => \App\Models\Schedule::where('status','active')
-                                    ->whereDate('schedule_date', $today)->count(),
-            'weekSchedules'     => \App\Models\Schedule::where('status','active')
-                                    ->whereBetween('schedule_date', [$today, $weekEnd])->count(),
-            'unassignedCount'   => $unassigned->count(),
+            'todaySchedules' => \App\Models\Schedule::where('status', 'active')
+                ->whereDate('schedule_date', $today)->count(),
+            'weekSchedules' => \App\Models\Schedule::where('status', 'active')
+                ->whereBetween('schedule_date', [$today, $weekEnd])->count(),
+            'unassignedCount' => $unassigned->count(),
             'unassignedSchedules' => $unassigned,
-            'totalRosters'      => \App\Models\DutyRoster::whereDate('duty_date', $today)->count(),
+            'totalRosters' => \App\Models\DutyRoster::whereDate('duty_date', $today)->count(),
         ]);
     })->name('dashboard');
 });
@@ -407,6 +411,8 @@ Route::middleware(['auth', 'role:timekeeper'])->prefix('timekeeper')->name('time
 Route::middleware(['auth', 'role:admin,executive_officer,timekeeper'])->group(function () {
     Route::resource('rosters', App\Http\Controllers\DutyRosterController::class)
         ->except(['edit', 'update', 'show']);
+    Route::get('rosters/pdf', [App\Http\Controllers\DutyRosterController::class, 'downloadPdf'])
+        ->name('rosters.pdf');
 });
 
 // ══════════════════════════════════════════════════════════════
@@ -433,11 +439,11 @@ Route::middleware(['auth', 'role:admin,executive_officer,storekeeper'])->group(f
 // ══════════════════════════════════════════════════════════════
 
 Route::middleware('auth')->prefix('analytics')->name('analytics.')->group(function () {
-    Route::get('/admin',       [App\Http\Controllers\AnalyticsController::class, 'adminData'])
+    Route::get('/admin', [App\Http\Controllers\AnalyticsController::class, 'adminData'])
         ->middleware('role:admin')->name('admin');
-    Route::get('/officer',     [App\Http\Controllers\AnalyticsController::class, 'officerData'])
+    Route::get('/officer', [App\Http\Controllers\AnalyticsController::class, 'officerData'])
         ->middleware('role:executive_officer')->name('officer');
-    Route::get('/timekeeper',  [App\Http\Controllers\AnalyticsController::class, 'timekeeperData'])
+    Route::get('/timekeeper', [App\Http\Controllers\AnalyticsController::class, 'timekeeperData'])
         ->middleware('role:timekeeper')->name('timekeeper');
     Route::get('/storekeeper', [App\Http\Controllers\AnalyticsController::class, 'storekeeperData'])
         ->middleware('role:storekeeper')->name('storekeeper');
@@ -449,4 +455,4 @@ Route::middleware(['auth', 'role:admin'])->group(function () {
         ->name('activity.log');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';
