@@ -13,6 +13,7 @@
             ['label' => 'Breakdowns', 'route' => 'breakdowns.index'],
             ['label' => 'Inventory', 'route' => 'inventory.index'],
             ['label' => 'Audit Log',       'route' => 'activity.log'],
+            ['label' => 'My Profile', 'route' => 'profile.edit'],
             ['label' => 'Messages', 'route' => 'chatify'],
         ],
         'executive_officer' => [
@@ -25,6 +26,7 @@
             ['label' => 'Duty Rosters', 'route' => 'rosters.index'],
             ['label' => 'Bookings', 'route' => 'bookings.index'],
             ['label' => 'Breakdowns', 'route' => 'breakdowns.index'],
+            ['label' => 'My Profile', 'route' => 'profile.edit'],
             ['label' => 'Messages', 'route' => 'chatify'],
         ],
         'timekeeper' => [
