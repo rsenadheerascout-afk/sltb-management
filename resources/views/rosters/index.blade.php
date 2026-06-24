@@ -111,9 +111,13 @@
                     <tr>
                         <td colspan="8" class="px-4 py-12 text-center text-gray-400 text-sm">
                             No duty assignments found.
-                            <a href="{{ route('rosters.create') }}" class="text-blue-600 hover:underline ml-1">
-                                Assign one now
-                            </a>
+                            @if(request()->hasAny(['date', 'user_id']))
+                                <a href="{{ route('rosters.index') }}" class="text-blue-600 hover:underline ml-1">Clear
+                                    filters</a>
+                            @else
+                                <a href="{{ route('rosters.create') }}" class="text-blue-600 hover:underline ml-1">Assign the
+                                    first duty</a>
+                            @endif
                         </td>
                     </tr>
                 @endforelse
