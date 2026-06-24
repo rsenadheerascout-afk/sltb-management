@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\LogsActivity;
 
 class Schedule extends Model
 {
+    use LogsActivity;
     protected $fillable = [
         'route_id', 'bus_id', 'driver_id', 'conductor_id',
         'departure_time', 'arrival_time', 'schedule_date',

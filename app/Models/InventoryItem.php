@@ -3,9 +3,11 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\LogsActivity;
 
 class InventoryItem extends Model
 {
+    use LogsActivity;
     protected $fillable = [
         'name', 'category', 'quantity', 'unit',
         'low_stock_threshold', 'unit_price', 'supplier', 'notes',
