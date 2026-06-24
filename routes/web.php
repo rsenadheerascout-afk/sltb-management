@@ -324,10 +324,14 @@ Route::middleware(['auth', 'role:driver,conductor'])->group(function () {
         ->name('breakdowns.store');
 });
 
-// Admin/officer: manage reports
-Route::middleware(['auth', 'role:admin,executive_officer'])->group(function () {
+// Admin/officer/storekeeper: view breakdown reports list
+Route::middleware(['auth', 'role:admin,executive_officer,storekeeper'])->group(function () {
     Route::get('/breakdowns', [App\Http\Controllers\BreakdownReportController::class, 'index'])
         ->name('breakdowns.index');
+});
+
+// Admin/officer: manage reports
+Route::middleware(['auth', 'role:admin,executive_officer'])->group(function () {
     Route::post('/breakdowns/{breakdown}/approve', [App\Http\Controllers\BreakdownReportController::class, 'approve'])
         ->name('breakdowns.approve');
     Route::post('/breakdowns/{breakdown}/reject', [App\Http\Controllers\BreakdownReportController::class, 'reject'])
@@ -409,7 +413,7 @@ Route::middleware(['auth', 'role:admin,executive_officer,timekeeper'])->group(fu
 // INVENTORY (storekeeper + admin + officer)
 // ══════════════════════════════════════════════════════════════
 
-Route::middleware(['auth', 'role:storekeeper,admin,executive_officer'])->group(function () {
+Route::middleware(['auth', 'role:admin,executive_officer,storekeeper'])->group(function () {
 
     Route::resource('inventory', App\Http\Controllers\InventoryController::class)
         ->except(['destroy']);
@@ -437,6 +441,12 @@ Route::middleware('auth')->prefix('analytics')->name('analytics.')->group(functi
         ->middleware('role:timekeeper')->name('timekeeper');
     Route::get('/storekeeper', [App\Http\Controllers\AnalyticsController::class, 'storekeeperData'])
         ->middleware('role:storekeeper')->name('storekeeper');
+});
+
+// ── Audit log (admin only) ────────────────────────────────────────────────
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/activity-log', [App\Http\Controllers\ActivityLogController::class, 'index'])
+        ->name('activity.log');
 });
 
 require __DIR__.'/auth.php';

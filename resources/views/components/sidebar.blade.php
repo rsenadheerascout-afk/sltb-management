@@ -12,6 +12,7 @@
             ['label' => 'Bookings', 'route' => 'bookings.index'],
             ['label' => 'Breakdowns', 'route' => 'breakdowns.index'],
             ['label' => 'Inventory', 'route' => 'inventory.index'],
+            ['label' => 'Audit Log',       'route' => 'activity.log'],
             ['label' => 'Messages', 'route' => 'chatify'],
         ],
         'executive_officer' => [
