@@ -137,12 +137,16 @@
         <aside class="w-64 bg-white border-r border-gray-200 flex flex-col flex-shrink-0">
             <div class="px-5 py-4 border-b border-gray-200">
                 <a href="{{ route('home') }}" class="flex items-center gap-2.5">
-                    <div class="w-8 h-8 bg-blue-700 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <div class="h-10 w-auto flex items-center justify-center flex-shrink-0">
+                        <img src="{{ asset('images/sltb-logo.png') }}" alt="SLTB Logo"
+                            class="w-full h-full object-contain">
+                    </div>
+                    <!-- <div class="w-8 h-8 bg-blue-700 rounded-lg flex items-center justify-center flex-shrink-0">
                         <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                         </svg>
-                    </div>
+                    </div> -->
                     <div>
                         <span class="text-sm font-semibold text-gray-800 block leading-tight">SLTB Yatinuwara</span>
                         <span class="text-xs text-gray-400 leading-tight">
@@ -186,7 +190,7 @@
                         @endphp
                         @if($unread > 0)
                             <span class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-xs
-                                     rounded-full flex items-center justify-center leading-none">
+                                         rounded-full flex items-center justify-center leading-none">
                                 {{ $unread > 9 ? '9+' : $unread }}
                             </span>
                         @endif

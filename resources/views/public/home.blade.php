@@ -14,12 +14,15 @@
     <nav class="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="w-9 h-9 bg-blue-700 rounded-lg flex items-center justify-center">
+                <div class="h-10 w-auto flex items-center justify-center flex-shrink-0">
+                    <img src="{{ asset('images/sltb-logo.png') }}" alt="SLTB Logo" class="w-full h-full object-contain">
+                </div>
+                <!-- <div class="w-9 h-9 bg-blue-700 rounded-lg flex items-center justify-center">
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                     </svg>
-                </div>
+                </div> -->
                 <div>
                     <span class="font-bold text-gray-900 text-sm">SLTB Yatinuwara</span>
                     <span class="text-gray-400 text-xs block leading-tight">Yatinuwara Depot</span>
