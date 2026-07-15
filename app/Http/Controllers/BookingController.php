@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreBookingRequest;
 use App\Mail\BookingConfirmation;
 use App\Models\Booking;
+use App\Models\Bus;
+use App\Models\Route;
 use App\Models\Schedule;
 use App\Models\Seat;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -41,9 +43,9 @@ class BookingController extends Controller
             ->toArray();
 
         $seats = $schedule->bus->seats->map(fn($seat) => [
-            'id'          => $seat->id,
+            'id' => $seat->id,
             'seat_number' => $seat->seat_number,
-            'status'      => in_array($seat->id, $bookedSeatIds)
+            'status' => in_array($seat->id, $bookedSeatIds)
                 ? 'booked'
                 : (in_array($seat->id, $pendingSeatIds) ? 'pending' : 'available'),
         ]);
@@ -62,13 +64,13 @@ class BookingController extends Controller
 
         if ($request->isMethod('POST')) {
             $request->validate([
-                'seat_ids'   => ['required', 'array', 'min:1', 'max:6'],
+                'seat_ids' => ['required', 'array', 'min:1', 'max:6'],
                 'seat_ids.*' => ['exists:seats,id'],
             ]);
 
             // Store in session — survives page refresh
             session([
-                'booking_seat_ids'    => $request->seat_ids,
+                'booking_seat_ids' => $request->seat_ids,
                 'booking_schedule_id' => $schedule->id,
             ]);
         }
@@ -110,9 +112,9 @@ class BookingController extends Controller
     public function checkout(StoreBookingRequest $request)
     {
         $schedule = Schedule::with(['route', 'bus'])->findOrFail($request->schedule_id);
-        $seatIds  = $request->seat_ids;
-        $seats    = Seat::whereIn('id', $seatIds)->get();
-        $total    = $schedule->fare * count($seatIds);
+        $seatIds = $request->seat_ids;
+        $seats = Seat::whereIn('id', $seatIds)->get();
+        $total = $schedule->fare * count($seatIds);
 
         // Final availability check
         $conflict = Booking::where('schedule_id', $schedule->id)
@@ -129,11 +131,11 @@ class BookingController extends Controller
             Stripe::setApiKey(config('services.stripe.secret'));
 
             $intent = PaymentIntent::create([
-                'amount'   => (int) ($total * 100), // LKR in cents
+                'amount' => (int) ($total * 100), // LKR in cents
                 'currency' => 'lkr',
                 'metadata' => [
-                    'schedule_id'    => $schedule->id,
-                    'seat_ids'       => implode(',', $seatIds),
+                    'schedule_id' => $schedule->id,
+                    'seat_ids' => implode(',', $seatIds),
                     'passenger_name' => $request->passenger_name,
                 ],
             ]);
@@ -141,20 +143,20 @@ class BookingController extends Controller
             // Create one pending booking record per seat
             foreach ($seatIds as $seatId) {
                 Booking::create([
-                    'user_id'                  => Auth::check() ? Auth::id() : null,
-                    'passenger_id'             => Auth::guard('passenger')->check()
-                                                    ? Auth::guard('passenger')->id()
-                                                    : null,
-                    'schedule_id'              => $schedule->id,
-                    'seat_id'                  => $seatId,
-                    'passenger_name'           => $request->passenger_name,
-                    'passenger_email'          => $request->passenger_email,
-                    'passenger_phone'          => $request->passenger_phone,
-                    'passenger_nic'            => $request->passenger_nic,
-                    'amount'                   => $schedule->fare,
+                    'user_id' => Auth::check() ? Auth::id() : null,
+                    'passenger_id' => Auth::guard('passenger')->check()
+                        ? Auth::guard('passenger')->id()
+                        : null,
+                    'schedule_id' => $schedule->id,
+                    'seat_id' => $seatId,
+                    'passenger_name' => $request->passenger_name,
+                    'passenger_email' => $request->passenger_email,
+                    'passenger_phone' => $request->passenger_phone,
+                    'passenger_nic' => $request->passenger_nic,
+                    'amount' => $schedule->fare,
                     'stripe_payment_intent_id' => $intent->id,
-                    'payment_status'           => 'pending',
-                    'booking_ref'              => Booking::generateRef(),
+                    'payment_status' => 'pending',
+                    'booking_ref' => Booking::generateRef(),
                 ]);
             }
 
@@ -162,14 +164,14 @@ class BookingController extends Controller
             session()->forget(['booking_seat_ids', 'booking_schedule_id']);
 
             return view('bookings.payment', [
-                'schedule'       => $schedule,
-                'seats'          => $seats,
-                'total'          => $total,
-                'clientSecret'   => $intent->client_secret,
-                'stripeKey'      => config('services.stripe.key'),
-                'passengerName'  => $request->passenger_name,
+                'schedule' => $schedule,
+                'seats' => $seats,
+                'total' => $total,
+                'clientSecret' => $intent->client_secret,
+                'stripeKey' => config('services.stripe.key'),
+                'passengerName' => $request->passenger_name,
                 'passengerEmail' => $request->passenger_email,
-                'intentId'       => $intent->id,
+                'intentId' => $intent->id,
             ]);
 
         } catch (\Exception $e) {
@@ -206,7 +208,7 @@ class BookingController extends Controller
             foreach ($bookings as $booking) {
                 $booking->update([
                     'payment_status' => 'paid',
-                    'booked_at'      => now(),
+                    'booked_at' => now(),
                 ]);
             }
 
@@ -258,13 +260,80 @@ class BookingController extends Controller
         return $pdf->download("receipt-{$booking->booking_ref}.pdf");
     }
 
-    // ── Admin: list all bookings ─────────────────────────────────────────
-    public function index()
-    {
-        $bookings = Booking::with(['schedule.route', 'seat'])
-            ->latest()
-            ->paginate(20);
+    // // ── Admin: list all bookings ─────────────────────────────────────────
+    // public function index()
+    // {
+    //     $bookings = Booking::with(['schedule.route', 'seat'])
+    //         ->latest()
+    //         ->paginate(20);
 
-        return view('bookings.index', compact('bookings'));
+    //     return view('bookings.index', compact('bookings'));
+    // }
+    // ── Admin: list all bookings with filters ────────────────────────────────
+    public function index(Request $request)
+    {
+        $query = Booking::with(['schedule.route', 'schedule.bus', 'seat']);
+
+        // Search across booking reference, passenger name, and email
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('booking_ref', 'like', "%{$search}%")
+                    ->orWhere('passenger_name', 'like', "%{$search}%")
+                    ->orWhere('passenger_email', 'like', "%{$search}%");
+            });
+        }
+
+        // Filter by route (via the schedule relationship)
+        if ($request->filled('route')) {
+            $query->whereHas('schedule', function ($q) use ($request) {
+                $q->where('route_id', $request->route);
+            });
+        }
+
+        // Filter by payment status
+        if ($request->filled('status')) {
+            $query->where('payment_status', $request->status);
+        }
+
+        // Filter by travel date (the schedule's date, not the booking's created_at)
+        if ($request->filled('travel_date')) {
+            $query->whereHas('schedule', function ($q) use ($request) {
+                $q->whereDate('schedule_date', $request->travel_date);
+            });
+        }
+
+        // Filter by seat number (exact match, e.g. "05")
+        if ($request->filled('seat')) {
+            $query->whereHas('seat', function ($q) use ($request) {
+                $q->where('seat_number', $request->seat);
+            });
+        }
+
+        // Filter by bus
+        if ($request->filled('bus')) {
+            $query->whereHas('schedule', function ($q) use ($request) {
+                $q->where('bus_id', $request->bus);
+            });
+        }
+
+        // Sorting
+        match ($request->sort) {
+            'oldest' => $query->oldest(),
+            'amount_high' => $query->orderByDesc('amount'),
+            'amount_low' => $query->orderBy('amount'),
+            default => $query->latest(),
+        };
+
+        $bookings = $query->paginate(20)->withQueryString();
+
+        // Summary for the currently filtered result set (whole set, not just this page)
+        $filteredTotal = (clone $query)->where('payment_status', 'paid')->sum('amount');
+        $filteredCount = (clone $query)->count();
+
+        $routes = Route::orderBy('name')->get();
+        $buses = Bus::orderBy('depot_reg_no')->get();
+
+        return view('bookings.index', compact('bookings', 'routes', 'buses', 'filteredTotal', 'filteredCount'));
     }
 }
