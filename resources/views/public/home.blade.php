@@ -243,8 +243,8 @@
                 </div>
                 <div>
                     <h4 class="font-semibold text-gray-900 text-sm">Enquiries</h4>
-                    <p class="text-sm text-gray-500 mt-1">For assistance, visit the depot office or contact SLTB
-                        Yatinuwara directly.</p>
+                    <p class="text-sm text-gray-500 mt-1">For assistance, visit the depot office or contact SLTB Yatinuwara directly.</p>
+                    <p class="text-sm text-gray-500 mt-1">Phone: +94 81 123 4567</p>
                 </div>
             </div>
         </div>

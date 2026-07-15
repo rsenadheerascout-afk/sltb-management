@@ -11,12 +11,16 @@
 <header class="bg-white border-b border-gray-200 px-6 py-4">
     <div class="max-w-lg mx-auto flex items-center justify-between">
         <a href="{{ route('home') }}" class="flex items-center gap-2">
-            <div class="w-7 h-7 bg-blue-700 rounded-lg flex items-center justify-center">
+            <div class="h-10 w-auto flex items-center justify-center flex-shrink-0">
+                        <img src="{{ asset('images/sltb-logo.png') }}" alt="SLTB Logo"
+                            class="w-full h-full object-contain">
+                    </div>
+            <!-- <div class="w-7 h-7 bg-blue-700 rounded-lg flex items-center justify-center">
                 <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                           d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/>
                 </svg>
-            </div>
+            </div> -->
             <span class="text-sm font-semibold text-gray-800">SLTB Yatinuwara</span>
         </a>
         <a href="{{ route('passenger.login') }}" class="text-sm text-gray-500 hover:text-gray-700">
