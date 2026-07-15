@@ -7,8 +7,24 @@ use Illuminate\Support\Facades\Route;
 // ══════════════════════════════════════════════════════════════
 
 // Homepage — passenger-friendly landing page
+// Route::get('/', function () {
+//     return view('public.home');
+// })->name('home');
+// New homepage route with upcoming (5) schedules and active routes
 Route::get('/', function () {
-    return view('public.home');
+    $upcomingSchedules = \App\Models\Schedule::with(['route', 'bus'])
+        ->where('status', 'active')
+        ->where('schedule_date', '>=', today())
+        ->orderBy('schedule_date')
+        ->orderBy('departure_time')
+        ->take(5)
+        ->get();
+
+    $routes = \App\Models\Route::where('status', 'active')
+        ->orderBy('name')
+        ->get();
+
+    return view('public.home', compact('upcomingSchedules', 'routes'));
 })->name('home');
 
 // Public employee registration application form

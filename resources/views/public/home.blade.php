@@ -29,7 +29,8 @@
                 </div>
             </div>
             <div class="flex items-center gap-4">
-                <a href="#schedules" class="text-sm text-gray-600 hover:text-gray-900">Schedules</a>
+                <a href="{{ route('schedules.public') }}"
+                    class="text-sm text-gray-600 hover:text-gray-900">Schedules</a>
                 <a href="#how-to-book" class="text-sm text-gray-600 hover:text-gray-900">How to book</a>
 
                 @auth('passenger')
@@ -110,52 +111,58 @@
                 <p class="text-gray-500 mt-2">Browse upcoming bus services from Yatinuwara Depot</p>
             </div>
 
-            {{-- Schedule search/filter placeholder --}}
-            <div class="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
+            {{-- Quick search — submits to the full schedules page --}}
+            <form method="GET" action="{{ route('schedules.public') }}"
+                class="bg-white rounded-2xl border border-gray-200 p-6 mb-6">
                 <div class="flex gap-3 flex-wrap">
-                    <input type="text" placeholder="Search route or destination..."
-                        class="flex-1 min-w-48 px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                    <input type="date"
-                        class="px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                    <button class="px-6 py-2.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 font-medium">
+                    <select name="route_id" class="flex-1 min-w-48 px-4 py-2.5 border border-gray-200 rounded-lg text-sm
+                               focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        <option value="">All routes</option>
+                        @foreach($routes as $route)
+                            <option value="{{ $route->id }}">{{ $route->name }}</option>
+                        @endforeach
+                    </select>
+                    <input type="date" name="date" min="{{ today()->format('Y-m-d') }}" class="px-4 py-2.5 border border-gray-200 rounded-lg text-sm
+                              focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    <button type="submit"
+                        class="px-6 py-2.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 font-medium">
                         Search
                     </button>
                 </div>
-            </div>
+            </form>
 
-            {{-- Placeholder schedule cards — will be replaced with real data in Branch 3 --}}
+            {{-- Real upcoming schedules --}}
             <div class="space-y-3">
-                @php
-                    $placeholderSchedules = [
-                        ['route' => 'Kandy — Peradeniya', 'from' => 'Kandy', 'to' => 'Peradeniya', 'dep' => '6:00 AM', 'arr' => '6:30 AM', 'bus' => 'YT001', 'fare' => 35, 'seats' => 42],
-                        ['route' => 'Kandy — Gampola', 'from' => 'Kandy', 'to' => 'Gampola', 'dep' => '7:30 AM', 'arr' => '8:15 AM', 'bus' => 'YT007', 'fare' => 55, 'seats' => 18],
-                        ['route' => 'Peradeniya — Kandy', 'from' => 'Peradeniya', 'to' => 'Kandy', 'dep' => '9:00 AM', 'arr' => '9:30 AM', 'bus' => 'YT042', 'fare' => 35, 'seats' => 0],
-                    ];
-                @endphp
-
-                @foreach($placeholderSchedules as $s)
+                @forelse($upcomingSchedules as $schedule)
+                    @php $available = $schedule->availableSeatsCount(); @endphp
                     <div
                         class="bg-white rounded-xl border border-gray-200 p-5 flex items-center justify-between hover:border-blue-300 transition-colors">
                         <div class="flex-1">
-                            <div class="flex items-center gap-3 mb-2">
-                                <h3 class="font-semibold text-gray-900">{{ $s['route'] }}</h3>
-                                <span
-                                    class="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded">{{ $s['bus'] }}</span>
+                            <div class="flex items-center gap-3 mb-2 flex-wrap">
+                                <h3 class="font-semibold text-gray-900">{{ $schedule->route->name }}</h3>
+                                <span class="font-mono text-xs bg-blue-50 text-blue-700 px-2 py-0.5 rounded">
+                                    {{ $schedule->bus->depot_reg_no }}
+                                </span>
+                                <span class="text-xs text-gray-400">
+                                    {{ $schedule->schedule_date->format('D, d M') }}
+                                </span>
                             </div>
-                            <div class="flex gap-6 text-sm text-gray-500">
-                                <span>Departs <strong class="text-gray-800">{{ $s['dep'] }}</strong></span>
-                                <span>Arrives <strong class="text-gray-800">{{ $s['arr'] }}</strong></span>
+                            <div class="flex gap-6 text-sm text-gray-500 flex-wrap">
+                                <span>Departs <strong
+                                        class="text-gray-800">{{ \Carbon\Carbon::parse($schedule->departure_time)->format('h:i A') }}</strong></span>
+                                <span>Arrives <strong
+                                        class="text-gray-800">{{ \Carbon\Carbon::parse($schedule->arrival_time)->format('h:i A') }}</strong></span>
                                 <span
-                                    class="{{ $s['seats'] > 5 ? 'text-green-600' : ($s['seats'] > 0 ? 'text-amber-600' : 'text-red-500') }} font-medium">
-                                    {{ $s['seats'] > 0 ? $s['seats'] . ' seats available' : 'Fully booked' }}
+                                    class="{{ $available > 5 ? 'text-green-600' : ($available > 0 ? 'text-amber-600' : 'text-red-500') }} font-medium">
+                                    {{ $available > 0 ? $available . ' seats available' : 'Fully booked' }}
                                 </span>
                             </div>
                         </div>
-                        <div class="text-right ml-6">
-                            <p class="text-xl font-bold text-gray-900">LKR {{ $s['fare'] }}</p>
+                        <div class="text-right ml-6 flex-shrink-0">
+                            <p class="text-xl font-bold text-gray-900">LKR {{ number_format($schedule->fare, 0) }}</p>
                             <p class="text-xs text-gray-400 mb-3">per seat</p>
-                            @if($s['seats'] > 0)
-                                <a href="{{ route('login') }}"
+                            @if($available > 0)
+                                <a href="{{ route('booking.select-seats', $schedule) }}"
                                     class="px-5 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 inline-block font-medium">
                                     Book Now
                                 </a>
@@ -165,12 +172,22 @@
                             @endif
                         </div>
                     </div>
-                @endforeach
+                @empty
+                    <div class="bg-white rounded-xl border border-gray-200 p-10 text-center">
+                        <p class="text-gray-400 text-sm">No upcoming schedules at the moment. Please check back soon.</p>
+                    </div>
+                @endforelse
             </div>
 
             <div class="text-center mt-8">
-                <p class="text-sm text-gray-400">Showing sample schedules. Full schedule available after system launch.
-                </p>
+                <a href="{{ route('schedules.public') }}"
+                    class="inline-flex items-center gap-2 px-6 py-3 border border-blue-200 text-blue-700 text-sm font-medium rounded-xl hover:bg-blue-50 transition-colors">
+                    View All Schedules
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                    </svg>
+                </a>
             </div>
         </div>
     </section>
@@ -243,7 +260,8 @@
                 </div>
                 <div>
                     <h4 class="font-semibold text-gray-900 text-sm">Enquiries</h4>
-                    <p class="text-sm text-gray-500 mt-1">For assistance, visit the depot office or contact SLTB Yatinuwara directly.</p>
+                    <p class="text-sm text-gray-500 mt-1">For assistance, visit the depot office or contact SLTB
+                        Yatinuwara directly.</p>
                     <p class="text-sm text-gray-500 mt-1">Phone: +94 81 123 4567</p>
                 </div>
             </div>
@@ -258,7 +276,7 @@
                 <p class="text-gray-400 text-xs mt-1">Sri Lanka Transport Board &middot; Yatinuwara Depot</p>
             </div>
             <div class="flex gap-6 text-xs text-gray-400">
-                <a href="#schedules" class="hover:text-white transition-colors">Schedules</a>
+                <a href="{{ route('schedules.public') }}" class="hover:text-white transition-colors">Schedules</a>
                 <a href="#how-to-book" class="hover:text-white transition-colors">How to book</a>
                 <a href="{{ route('employee.apply') }}" class="hover:text-white transition-colors">Join staff</a>
                 <a href="{{ route('login') }}" class="hover:text-white transition-colors">Staff login</a>

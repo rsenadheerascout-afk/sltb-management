@@ -11,10 +11,15 @@
 <body class="bg-gray-50 min-h-screen">
     <header class="bg-white border-b border-gray-200 px-6 py-4">
         <div class="max-w-5xl mx-auto flex items-center justify-between">
-            <div>
-                <h1 class="text-lg font-semibold text-gray-800">SLTB Yatinuwara Depot</h1>
-                <p class="text-xs text-gray-400">Bus Schedules &amp; Seat Booking</p>
-            </div>
+            <a href="{{ route('home') }}" class="flex items-center gap-2">
+                <div class="h-10 w-auto flex items-center justify-center flex-shrink-0">
+                    <img src="{{ asset('images/sltb-logo.png') }}" alt="SLTB Logo" class="w-full h-full object-contain">
+                </div>
+                <div>
+                    <span class="text-sm font-semibold text-gray-800">SLTB Yatinuwara Depot</span>
+                    <span class="text-gray-400 text-xs block leading-tight">Bus Schedules &amp; Seat Booking</span>
+                </div>
+            </a>
             <div class="flex gap-3">
                 <a href="{{ route('login') }}" class="text-sm text-gray-600 hover:text-gray-800">Staff login</a>
                 <a href="{{ route('employee.apply') }}" class="text-sm text-blue-600 hover:text-blue-800">Apply to
