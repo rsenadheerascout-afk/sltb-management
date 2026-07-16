@@ -84,14 +84,28 @@ class ScheduleController extends Controller
     }
 
     public function edit(Schedule $schedule)
-    {
-        $routes = Route::where('status', 'active')->orderBy('name')->get();
-        $buses = Bus::where('status', 'active')->orderBy('depot_reg_no')->get();
-        $drivers = User::where('role', 'driver')->where('status', 'active')->orderBy('name')->get();
-        $conductors = User::where('role', 'conductor')->where('status', 'active')->orderBy('name')->get();
+{
+    $routes = Route::where('status', 'active')->orderBy('name')->get();
 
-        return view('schedules.edit', compact('schedule', 'routes', 'buses', 'drivers', 'conductors'));
-    }
+    $buses = Bus::where(function ($q) use ($schedule) {
+            $q->where('status', 'active')->orWhere('id', $schedule->bus_id);
+        })
+        ->orderBy('depot_reg_no')->get();
+
+    $drivers = User::where('role', 'driver')
+        ->where(function ($q) use ($schedule) {
+            $q->where('status', 'active')->orWhere('id', $schedule->driver_id);
+        })
+        ->orderBy('name')->get();
+
+    $conductors = User::where('role', 'conductor')
+        ->where(function ($q) use ($schedule) {
+            $q->where('status', 'active')->orWhere('id', $schedule->conductor_id);
+        })
+        ->orderBy('name')->get();
+
+    return view('schedules.edit', compact('schedule', 'routes', 'buses', 'drivers', 'conductors'));
+}
 
     public function update(UpdateScheduleRequest $request, Schedule $schedule)
     {

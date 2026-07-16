@@ -8,6 +8,14 @@ class UpdateScheduleRequest extends FormRequest
 {
     public function authorize(): bool { return true; }
 
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'departure_time' => $this->departure_time ? substr($this->departure_time, 0, 5) : $this->departure_time,
+            'arrival_time'   => $this->arrival_time ? substr($this->arrival_time, 0, 5) : $this->arrival_time,
+        ]);
+    }
+
     public function rules(): array
     {
         return [

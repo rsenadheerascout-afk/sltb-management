@@ -10,8 +10,14 @@
 
     <header class="bg-white border-b border-gray-200 px-6 py-4">
         <div class="max-w-xl mx-auto">
-            <a href="{{ route('home') }}" class="text-sm font-semibold text-gray-800">
-                SLTB Yatinuwara
+            <a href="{{ route('home') }}" class="flex items-center gap-2">
+                <div class="h-10 w-auto flex items-center justify-center flex-shrink-0">
+                    <img src="{{ asset('images/sltb-logo.png') }}" alt="SLTB Logo" class="w-full h-full object-contain">
+                </div>
+                <div>
+                <span class="text-sm font-semibold text-gray-800">SLTB Yatinuwara</span>
+                <span class="text-gray-400 text-xs block leading-tight">Seat Reservation</span>
+                </div>
             </a>
         </div>
     </header>
